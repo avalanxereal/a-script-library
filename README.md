@@ -1,2 +1,1 @@
-# frfr
-just some backup
+print("just some backup")
