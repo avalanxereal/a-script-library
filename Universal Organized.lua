@@ -30,11 +30,6 @@ for i,v in pairs(getconnections(game:GetService("Players").LocalPlayer.Idled)) d
     wait(0.1)
 end
 
-if not game:IsLoaded() then
-	warn("Waiting for the game to load..")
-	game.Loaded:Wait();
-end
-
 local function ClonedService(name)
     local Service = (game.GetService);
 	local Reference = (cloneref) or function(reference) return reference end
@@ -43,54 +38,9 @@ end
 
 local countdown
 
-local function protectUI(sGui)
-    if sGui:IsA("ScreenGui") then
-        sGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-		sGui.DisplayOrder = 999999999
-		sGui.ResetOnSpawn = false
-		sGui.IgnoreGuiInset = true
-    end
-    local cGUI = ClonedService("CoreGui")
-    local lPlr = ClonedService("Players").LocalPlayer
-
-    local function NAProtection(inst, var)
-        if inst then
-            if var then
-                inst[var] = "\0"
-                inst.Archivable = false
-            else
-                inst.Name = "\0"
-                inst.Archivable = false
-            end
-        end
-    end
-
-    if gethui then
-		NAProtection(sGui)
-		sGui.Parent = gethui()
-		return sGui
-	elseif cGUI and cGUI:FindFirstChild("RobloxGui") then
-		NAProtection(sGui)
-		sGui.Parent = cGUI:FindFirstChild("RobloxGui")
-		return sGui
-	elseif cGUI then
-		NAProtection(sGui)
-		sGui.Parent = cGUI
-		return sGui
-	elseif lPlr and lPlr:FindFirstChildWhichIsA("PlayerGui") then
-		NAProtection(sGui)
-		sGui.Parent = lPlr:FindFirstChildWhichIsA("PlayerGui")
-		sGui.ResetOnSpawn = false
-		return sGui
-	else
-		return nil
-	end
-end
-
 -- Create the main ScreenGui
 vars.screenGui.Parent = game:GetService("CoreGui")
 vars.screenGui.Name = "youshalldie"
-protectUI(vars.screenGui)
 vars.screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 vars.screenGui.ResetOnSpawn = false
 vars.screenGui.DisplayOrder = 69
