@@ -44,7 +44,6 @@ local countdown
 -- Create the main ScreenGui
 vars.screenGui.Parent = game:GetService("CoreGui")
 vars.screenGui.Name = "youshalldie"
-protectUI(vars.screenGui)
 vars.screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 vars.screenGui.ResetOnSpawn = false
 vars.screenGui.DisplayOrder = 69
