@@ -3,12 +3,69 @@ for i,v in pairs(getconnections(game:GetService("Players").LocalPlayer.Idled)) d
     wait(0.1)
 end
 
+if not game:IsLoaded() then
+	warn("Waiting for the game to load..")
+	game.Loaded:Wait();
+end
+
+local function ClonedService(name)
+    local Service = (game.GetService);
+	local Reference = (cloneref) or function(reference) return reference end
+	return Reference(Service(game, name));
+end
+
+local function protectUI(sGui)
+    if sGui:IsA("ScreenGui") then
+        sGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+		sGui.DisplayOrder = 999999999
+		sGui.ResetOnSpawn = false
+		sGui.IgnoreGuiInset = true
+    end
+    local cGUI = ClonedService("CoreGui")
+    local lPlr = ClonedService("Players").LocalPlayer
+
+    local function NAProtection(inst, var)
+        if inst then
+            if var then
+                inst[var] = "\0"
+                inst.Archivable = false
+            else
+                inst.Name = "\0"
+                inst.Archivable = false
+            end
+        end
+    end
+
+    if gethui then
+		NAProtection(sGui)
+		sGui.Parent = gethui()
+		return sGui
+	elseif cGUI and cGUI:FindFirstChild("RobloxGui") then
+		NAProtection(sGui)
+		sGui.Parent = cGUI:FindFirstChild("RobloxGui")
+		return sGui
+	elseif cGUI then
+		NAProtection(sGui)
+		sGui.Parent = cGUI
+		return sGui
+	elseif lPlr and lPlr:FindFirstChildWhichIsA("PlayerGui") then
+		NAProtection(sGui)
+		sGui.Parent = lPlr:FindFirstChildWhichIsA("PlayerGui")
+		sGui.ResetOnSpawn = false
+		return sGui
+	else
+		return nil
+	end
+end
+
 -- Create the main ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = game:GetService("CoreGui")
 screenGui.Name = "youshalldie"
+protectUI(screenGui)
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.ResetOnSpawn = false
-screenGui.DisplayOrder = 999999999
+screenGui.DisplayOrder = 69
 
 if getgenv().AntiAfkExecuted and screenGui then
     getgenv().AntiAfkExecuted = false
@@ -46,6 +103,43 @@ getgenv().AutoRespawn = true
 local player = game.Players.LocalPlayer
 
 -- Create the buttons
+local LockButton = Instance.new("ImageButton")
+LockButton.Name = "LockButton"
+LockButton.Visible = false
+LockButton.Parent = screenGui
+LockButton.AnchorPoint = Vector2.new(0.5, 0.5)
+LockButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+LockButton.BackgroundTransparency = 0.3
+LockButton.BorderColor3 = Color3.fromRGB(27, 42, 53)
+LockButton.BorderSizePixel = 0
+LockButton.Position = UDim2.new(0.785148501, 0, 0.865914762, 0)
+LockButton.Size = UDim2.new(0, 65, 0, 65)
+LockButton.ZIndex = 3
+LockButton.Image = ""
+LockButton.AutoButtonColor = true
+
+local btnIcon = Instance.new("ImageLabel")
+btnIcon.Name = "btnIcon"
+btnIcon.Parent = LockButton
+btnIcon.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+btnIcon.BackgroundTransparency = 1
+btnIcon.Position = UDim2.new(0.15, 0, 0.15, 0)
+btnIcon.Size = UDim2.new(0.7, 0, 0.7, 0)
+btnIcon.ZIndex = 3
+btnIcon.Image = "rbxasset://textures/ui/mouseLock_off.png"
+btnIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+btnIcon.ScaleType = Enum.ScaleType.Fit
+
+local buttonEffect = Instance.new("UICorner")
+buttonEffect.Parent = LockButton
+buttonEffect.CornerRadius = UDim.new(1, 0)
+
+local buttonStroke = Instance.new("UIStroke")
+buttonStroke.Parent = LockButton
+buttonStroke.Color = Color3.fromRGB(0, 133, 199)
+buttonStroke.Thickness = 2
+buttonStroke.Transparency = 0.3
+
 local textButton1 = Instance.new("TextButton")
 textButton1.Size = UDim2.new(0, 160, 0, 30) -- Adjusted size
 textButton1.Position = UDim2.new(0, 10, 1, -120) -- Adjusted position
@@ -379,27 +473,278 @@ espButton.TextColor3 = Color3.new(255, 255, 255)
 espButton.Font = Enum.Font.Gotham
 espButton.Parent = Frame2
 
+local noCFButton = Instance.new("TextButton")
+noCFButton.Size = UDim2.new(0, 160, 0, 25)
+noCFButton.BorderColor3 = Color3.new(0, 0, 0)
+noCFButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45) -- Dark background color
+noCFButton.Text = "No CFrame TP : OFF"
+noCFButton.Name = "CFrame"
+noCFButton.TextSize = 14
+noCFButton.TextColor3 = Color3.new(255, 255, 255)
+noCFButton.Font = Enum.Font.Gotham
+noCFButton.Parent = Frame2
+
+-- function
+local TextButton1 = Instance.new("TextButton")
+TextButton1.Parent = Frame1
+TextButton1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TextButton1.BackgroundTransparency = 5.000
+TextButton1.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TextButton1.BorderSizePixel = 0
+TextButton1.Position = UDim2.new(0, -45, 0, -2)
+TextButton1.Size = UDim2.new(0, 170, 0, 44)
+TextButton1.Font = Enum.Font.SourceSansSemibold
+TextButton1.Text = "Toggle Npclock"
+TextButton1.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextButton1.TextSize = 13.000
+TextButton1.ZIndex = 1
+TextButton1.TextWrapped = true
+
+local Frame2 = Instance.new("Frame")
+Frame2.Parent = screenGui
+Frame2.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Frame2.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Frame2.BorderSizePixel = 0
+Frame2.Position = UDim2.new(0.88, 0, 0.05, 0)
+Frame2.Size = UDim2.new(0, 80, 0, 40)
+Frame2.Active = true
+Frame2.Draggable = false
+Frame2.Visible = false
+Frame2.ZIndex = 1
+
+local UICorner1 = Instance.new("UICorner")
+UICorner1.Parent = Frame2
+
+local highlight
+local targetBillboard
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
+local NpclockState = false
+local Prediction = 0.16
+local HorizontalPrediction = 0.17
+local VerticalPrediction = 0.14
+local XPrediction = 8.381
+local YPrediction = 7.282
+
+function applyTargetVisuals(model)
+    -- Cleanup old visuals
+    if highlight then highlight:Destroy() end
+    if targetBillboard then targetBillboard:Destroy() end
+
+    -- Highlight
+    highlight = Instance.new("Highlight")
+    highlight.Name = "_CamLockHighlight"
+    highlight.FillColor = Color3.fromRGB(0, 0, 0)
+    highlight.OutlineColor = Color3.fromRGB(200, 200, 200)
+    highlight.OutlineTransparency = 0
+    highlight.FillTransparency = 0.5
+    highlight.Adornee = model
+    highlight.Parent = model
+
+    -- Billboard [TARGET] text
+    local hrp = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart
+    if hrp then
+        targetBillboard = Instance.new("BillboardGui")
+        targetBillboard.Name = "_CamLockBillboard"
+        targetBillboard.Size = UDim2.new(0, 100, 0, 40)
+        targetBillboard.Adornee = hrp
+        targetBillboard.StudsOffset = Vector3.new(0, 3, 0)
+        targetBillboard.AlwaysOnTop = true
+        targetBillboard.Parent = hrp
+
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = "[TARGET]"
+        label.TextColor3 = Color3.fromRGB(255, 0, 0)
+        label.TextScaled = true
+        label.Font = Enum.Font.GothamBold
+        label.Parent = targetBillboard
+    end
+end
+
+function FindNearestEnemy()
+    local ClosestDistance, ClosestTarget = math.huge, nil
+    local CenterPosition = Vector2.new(
+        game:GetService("GuiService"):GetScreenResolution().X / 2,
+        game:GetService("GuiService"):GetScreenResolution().Y / 2
+    )
+
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj:FindFirstChildOfClass("Humanoid") and Players:GetPlayerFromCharacter(obj) == nil then
+            local humanoid = obj:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid.Health > 0 then
+                local targetPos = nil
+
+                local hrp = obj:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    targetPos = hrp.Position
+                elseif obj.PrimaryPart then
+                    targetPos = obj.PrimaryPart.Position
+                else
+                    pcall(function()
+                        targetPos = obj:GetModelCFrame().Position
+                    end)
+                end
+
+                if targetPos then
+                    local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(targetPos)
+                    if onScreen then
+                        local dist = (CenterPosition - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+                        if dist < ClosestDistance then
+                            ClosestDistance = dist
+                            ClosestTarget = hrp or obj
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return ClosestTarget
+end
+
+local enemy = nil
+-- Function to aim the camera at the nearest enemy's HumanoidRootPart
+RunService.Heartbeat:Connect(function()
+    if NpclockState == true then
+        if enemy and enemy.Parent then
+            local model = enemy.Parent
+            local humanoid = model:FindFirstChildOfClass("Humanoid")
+
+            if humanoid and humanoid.Health > 0 then
+                -- Still alive, keep locking
+                local lookPos = enemy.Position
+                pcall(function()
+                    lookPos = enemy.Position + (enemy.Velocity or Vector3.zero) * Prediction
+                end)
+                workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, lookPos)
+            else
+                -- Target died, reset camlock
+                NpclockState = false
+                enemy = nil
+                
+                TextButton1.Text = "OFF"
+                if highlight then highlight:Destroy() highlight = nil end
+                if targetBillboard then targetBillboard:Destroy() targetBillboard = nil end
+            end
+        else
+            -- Enemy doesn't exist anymore
+            NpclockState = false
+            enemy = nil
+            TextButton1.Text = "OFF"
+            if highlight then highlight:Destroy() highlight = nil end
+            if targetBillboard then targetBillboard:Destroy() targetBillboard = nil end
+        end
+    end
+end)
+
+local state = true
+TextButton1.MouseButton1Click:Connect(function()
+    state = not state
+
+    if not state then
+        NpclockState = true
+        enemy = FindNearestEnemy()
+        if enemy and enemy.Parent then
+            applyTargetVisuals(enemy.Parent)
+            TextButton1.Text = "ON"
+        end
+    else
+        TextButton1.Text = "OFF"
+        NpclockState = false
+        enemy = nil
+
+        -- Cleanup visuals
+        if highlight then highlight:Destroy() highlight = nil end
+        if targetBillboard then targetBillboard:Destroy() targetBillboard = nil end
+    end
+end)
+
+local tweenService = ClonedService("TweenService")
+local hoverInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local clickInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+local defaultProps = {
+    BackgroundTransparency = 0.3,
+    Size = UDim2.new(0, 65, 0, 65)
+}
+
+local hoverProps = {
+    BackgroundTransparency = 0.1,
+    Size = UDim2.new(0, 70, 0, 70)
+}
+
+local clickProps = {
+    BackgroundTransparency = 0,
+    Size = UDim2.new(0, 60, 0, 60)
+}
+
+local defaultTween = tweenService:Create(LockButton, hoverInfo, defaultProps)
+local hoverTween = tweenService:Create(LockButton, hoverInfo, hoverProps)
+local clickTween = tweenService:Create(LockButton, clickInfo, clickProps)
+
+LockButton.MouseEnter:Connect(function()
+    hoverTween:Play()
+end)
+
+LockButton.MouseLeave:Connect(function()
+    defaultTween:Play()
+end)
+
+LockButton.MouseButton1Down:Connect(function()
+    clickTween:Play()
+end)
+
+LockButton.MouseButton1Up:Connect(function()
+    hoverTween:Play()
+end)
+
+local V = false
 
 local Frame1 = Instance.new("Frame")
+Frame1.Parent = screenGui
+Frame1.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Frame1.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Frame1.BorderSizePixel = 0
+Frame1.Position = UDim2.new(0.76, 0, 0.05, 0)
+Frame1.Size = UDim2.new(0, 80, 0, 40)
+Frame1.Active = true
+Frame1.Draggable = false
+Frame1.Visible = false
+Frame1.ZIndex = 1
+
 local UICorner = Instance.new("UICorner")
 local TextButton = Instance.new("TextButton")
+TextButton.Parent = Frame1
+TextButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TextButton.BackgroundTransparency = 5.000
+TextButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TextButton.BorderSizePixel = 0
+TextButton.Position = UDim2.new(0, -45, 0, -2)
+TextButton.Size = UDim2.new(0, 170, 0, 44)
+TextButton.Font = Enum.Font.SourceSansSemibold
+TextButton.Text = "Toggle Camlock"
+TextButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextButton.TextSize = 13.000
+TextButton.ZIndex = 1
+TextButton.TextWrapped = true
+UICorner.Parent = Frame1
 
 -- Configuration
 local CamlockState = false
-local Prediction = 0.25
+local Prediction1 = 0.25
 local Locked = true
 getgenv().Key = "c"
 
-local enemy = nil
+local enemy1 = nil
 local glowEffect = nil
 local billboardGui = nil
 
 -- Function to find the nearest enemy
-function FindNearestEnemy()
+function FindNearestEnemy1()
     local ClosestDistance, ClosestPlayer = math.huge, nil
     local CenterPosition = Vector2.new(
         game:GetService("GuiService"):GetScreenResolution().X / 2,
@@ -471,99 +816,46 @@ end
 
 -- Function to reset target if enemy dies, despawns, or leaves
 local function resetTarget()
-    if enemy and (not enemy.Parent or enemy.Parent:FindFirstChild("Humanoid").Health <= 0) then
+    if enemy1 and (not enemy1.Parent or enemy1.Parent:FindFirstChild("Humanoid").Health <= 0) then
         removeGlow()
-        enemy = nil
-        state = true
+        enemy1 = nil
+        state1 = true
         CamlockState = false
         TextButton.Text = "Toggle Camlock"
         TextButton.TextSize = 13
     end
 end
 
--- Function to aim the camera at the nearest enemy's HumanoidRootPart
+-- Function to aim the camera at the nearest enemy1's HumanoidRootPart
 RunService.Heartbeat:Connect(function()
-    if CamlockState and enemy then
+    if CamlockState and enemy1 then
         resetTarget() -- Check if the enemy is still valid
-        if enemy then
+        if enemy1 then
             local camera = workspace.CurrentCamera
-            camera.CFrame = CFrame.new(camera.CFrame.p, enemy.Position + enemy.Velocity * Prediction)
+            camera.CFrame = CFrame.new(camera.CFrame.p, enemy1.Position + enemy1.Velocity * Prediction1)
         end
     end
 end)
 
-Mouse.KeyDown:Connect(function(k)
-    if k == getgenv().Key then
-        Locked = not Locked
-        if Locked then
-            enemy = FindNearestEnemy()
-            CamlockState = true
-            if enemy then
-                applyGlow(enemy.Parent) -- Apply glow effect to the enemy
-                TextButton.Text = "ON"
-                TextButton.TextSize = 20
-            end
-        else
-            removeGlow() -- Remove glow effect
-            enemy = nil
-            CamlockState = false
-            state = true
-            TextButton.Text = "Toggle Camlock"
-            TextButton.TextSize = 13
-        end
-    end
-end)
-
-Frame1.Parent = screenGui
-Frame1.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-Frame1.BorderColor3 = Color3.fromRGB(0, 0, 0)
-Frame1.BorderSizePixel = 0
-Frame1.Position = UDim2.new(0.76, 0, 0.05, 0)
-Frame1.Size = UDim2.new(0, 80, 0, 40)
-Frame1.Active = true
-Frame1.Draggable = true
-Frame1.Visible = false
-Frame1.ZIndex = 1
-UICorner.Parent = Frame1
-
-TextButton.Parent = Frame1
-TextButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TextButton.BackgroundTransparency = 5.000
-TextButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
-TextButton.BorderSizePixel = 0
-TextButton.Position = UDim2.new(0, -45, 0, -2)
-TextButton.Size = UDim2.new(0, 170, 0, 44)
-TextButton.Font = Enum.Font.SourceSansSemibold
-TextButton.Text = "Toggle Camlock"
-TextButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-TextButton.TextSize = 13.000
-TextButton.ZIndex = 1
-TextButton.TextWrapped = true
-
-local state = true
+local state1 = true
 TextButton.MouseButton1Click:Connect(function()
-    state = not state
-    if not state then
+    state1 = not state1
+    if not state1 then
         TextButton.Text = "ON"
         TextButton.TextSize = 20
         CamlockState = true
-        enemy = FindNearestEnemy()
-        if enemy then
-            applyGlow(enemy.Parent) -- Apply glow effect to the enemy
+        enemy1 = FindNearestEnemy1()
+        if enemy1 then
+            applyGlow(enemy1.Parent) -- Apply glow effect to the enemy
         end
     else
         TextButton.Text = "Toggle Camlock"
         TextButton.TextSize = 13
         CamlockState = false
         removeGlow() -- Remove glow effect
-        enemy = nil
+        enemy1 = nil
     end
 end)
-
--- Function to hide the loading screen after a certain duration
-local function HideLoadingScreen()
-    LoadingScreen:Destroy()
-end
 
 -- Create the delay TextBox
 local delayTextBox = Instance.new("TextBox")
@@ -768,162 +1060,6 @@ toggleButton.Draggable = true
 toggleButton.Parent = screenGui
 local UICornerfr = Instance.new("UICorner")
 UICornerfr.Parent = toggleButton
-
-local ImageButton = Instance.new("ImageButton")
-ImageButton.Parent = screenGui
-ImageButton.Visible = false
-ImageButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ImageButton.BackgroundTransparency = 1.000
-ImageButton.Position = UDim2.new(0.9219, 0, 0.5524, 0)
-ImageButton.Size = UDim2.new(0.0636, 0, 0.0661, 0)
-ImageButton.SizeConstraint = Enum.SizeConstraint.RelativeXX
-ImageButton.Image = "http://www.roblox.com/asset/?id=182223762"
-
--- Combined Shiftlock Script with Monitoring & Reset Logic
-local function ShiftlockScript()
-    local MobileCameraFramework = {}
-
-    -- Services and Variables
-    local players = game:GetService("Players")
-    local runservice = game:GetService("RunService")
-    local CAS = game:GetService("ContextActionService")
-    local uis = game:GetService("UserInputService")
-    local player = players.LocalPlayer
-    local camera = workspace.CurrentCamera
-    local GameSettings = UserSettings().GameSettings
-    local isMobile = uis.TouchEnabled
-    local button = ImageButton
-
-    button.Visible = false
-
-    local states = {
-        OFF = "rbxasset://textures/ui/mouseLock_off@2x.png",
-        ON = "rbxasset://textures/ui/mouseLock_on@2x.png"
-    }
-
-    local MAX_LENGTH = 900000
-    local active = false
-    local ENABLED_OFFSET = CFrame.new(1.7, 0, 0)
-    local DISABLED_OFFSET = CFrame.new(-1.7, 0, 0)
-    local IsShiftLocked = false
-    local IsShiftLockMode = true
-
-    -- Functions
-    local function UpdateImage(state)
-        button.Image = states[state]
-    end
-
-    local function UpdateAutoRotate(enabled)
-        player.Character.Humanoid.AutoRotate = enabled
-    end
-
-    local function GetUpdatedCameraCFrame(root, camera)
-        return CFrame.new(
-            root.Position,
-            Vector3.new(camera.CFrame.LookVector.X * MAX_LENGTH, root.Position.Y, camera.CFrame.LookVector.Z * MAX_LENGTH)
-        )
-    end
-
-    local function EnableShiftlock()
-        local root = player.Character:WaitForChild("HumanoidRootPart")
-        UpdateAutoRotate(false)
-        UpdateImage("ON")
-        root.CFrame = GetUpdatedCameraCFrame(root, camera)
-        camera.CFrame = camera.CFrame * ENABLED_OFFSET
-    end
-
-    local function DisableShiftlock()
-        UpdateAutoRotate(true)
-        UpdateImage("OFF")
-        camera.CFrame = camera.CFrame * DISABLED_OFFSET
-        if active then
-            active:Disconnect()
-            active = nil
-        end
-    end
-
-    local function ShiftLock()
-        if not active then
-            active = runservice.RenderStepped:Connect(function()
-                EnableShiftlock()
-            end)
-        else
-            DisableShiftlock()
-        end
-    end
-
-    -- Monitoring GameSettings and Player Changes
-    local function isShiftLockMode()
-        return player.DevEnableMouseLock and
-               GameSettings.ControlMode == Enum.ControlMode.MouseLockSwitch and
-               player.DevComputerMovementMode ~= Enum.DevComputerMovementMode.ClickToMove and
-               GameSettings.ComputerMovementMode ~= Enum.ComputerMovementMode.ClickToMove and
-               player.DevComputerMovementMode ~= Enum.DevComputerMovementMode.Scriptable
-    end
-
-    local function monitorSettings()
-        GameSettings.Changed:Connect(function(property)
-            if property == "ControlMode" then
-                if GameSettings.ControlMode == Enum.ControlMode.MouseLockSwitch then
-                    EnableShiftlock()
-                else
-                    DisableShiftlock()
-                end
-            elseif property == "ComputerMovementMode" then
-                if GameSettings.ComputerMovementMode == Enum.ComputerMovementMode.ClickToMove then
-                    DisableShiftlock()
-                else
-                    EnableShiftlock()
-                end
-            end
-        end)
-
-        player.Changed:Connect(function(property)
-            if property == "DevEnableMouseLock" then
-                if player.DevEnableMouseLock then
-                    EnableShiftlock()
-                else
-                    DisableShiftlock()
-                end
-            elseif property == "DevComputerMovementMode" then
-                if player.DevComputerMovementMode == Enum.DevComputerMovementMode.ClickToMove or
-                   player.DevComputerMovementMode == Enum.DevComputerMovementMode.Scriptable then
-                    DisableShiftlock()
-                else
-                    EnableShiftlock()
-                end
-            end
-        end)
-    end
-
-    -- Reset ShiftLock on Death or Respawn
-    local function resetShiftLockOnDeathOrRespawn()
-        player.CharacterAdded:Connect(function(character)
-            character:WaitForChild("Humanoid").Died:Connect(function()
-                if IsShiftLocked then
-                    DisableShiftlock()
-                    IsShiftLocked = false
-                end
-            end)
-        end)
-    end
-
-    -- Binding ShiftLock Button and Handling Input
-    CAS:BindAction("ShiftLOCK", ShiftLock, false, "On")
-
-    button.MouseButton1Click:Connect(function()
-        ShiftLock()
-    end)
-
-    -- Initialization
-    UpdateImage("OFF")
-    monitorSettings()
-    resetShiftLockOnDeathOrRespawn()
-
-    return MobileCameraFramework
-end
-
-coroutine.wrap(ShiftlockScript)()
 
 local function executeKillScript()
     sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", 112412400000)
@@ -1264,6 +1400,43 @@ local function toggleGodMode()
         modeButton.Text = "Unkillable : ON"
         immortalEnabled = true
         disableCanTouch() -- Disable CanTouch for all parts
+    end
+end
+
+
+-- No Cframe
+local root = character:WaitForChild("HumanoidRootPart")
+local antiCFrame = false
+local toggleCF = false
+local allowed = false
+local lastCFrame = root.CFrame
+
+-- Update last known position repeatedly
+task.spawn(function()
+	while antiCFrame and root do
+		lastCFrame = root.CFrame
+		task.wait()
+	end
+end)
+
+-- Revert if CFrame suddenly changes
+root:GetPropertyChangedSignal("CFrame"):Connect(function()
+	if antiCFrame and not allowed then
+   		allowed = true
+   		root.CFrame = lastCFrame
+   		task.wait()
+   		allowed = false
+	end
+end)
+
+local function toggleNoCF()
+    toggleCF = not toggleCF
+    if toggleCF then
+        noCFButton.Text = "No CFrame TP : ON"
+        antiCFrame = true
+    else
+        noCFButton.Text = "No CFrame TP : OFF"
+        antiCFrame = false
     end
 end
 
@@ -1889,10 +2062,10 @@ local function hideShift()
     shiftOpen = not shiftOpen
     if shiftOpen then
         shiftlockButton.Text = "Hide Shiftlock"
-        ImageButton.Visible = true
+        LockButton.Visible = true
     else
         shiftlockButton.Text = "Show Shiftlock"
-        ImageButton.Visible = false
+        LockButton.Visible = false
     end
 end
 
@@ -2372,7 +2545,74 @@ destroyButton.MouseButton1Click:Connect(function()
         getgenv().AntiAfkExecuted = false
     end
 end)
-    
+
+local function YDYMLAX_fake_script()
+    local script = Instance.new('LocalScript', LockButton)
+    local Input = ClonedService("UserInputService")
+    local main = script.Parent
+    local buttonStroke = main:FindFirstChildOfClass("UIStroke")
+    main.MouseButton1Click:Connect(function()
+        V = not V
+        if V then
+            main.btnIcon.ImageColor3 = Color3.fromRGB(0, 170, 255)
+            buttonStroke.Color = Color3.fromRGB(0, 170, 255)
+            buttonStroke.Thickness = 3
+            spawn(function()
+                while V do
+                    for i = 0.3, 0.7, 0.1 do
+                        if not V then break end
+                        buttonStroke.Transparency = i
+                        wait(0.1)
+                    end
+                    for i = 0.7, 0.3, -0.1 do
+                        if not V then break end
+                        buttonStroke.Transparency = i
+                        wait(0.1)
+                    end
+                end
+            end)
+            ForceShiftLock()
+        else
+            main.btnIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+            buttonStroke.Color = Color3.fromRGB(0, 133, 199)
+            buttonStroke.Thickness = 2
+            buttonStroke.Transparency = 0.3
+            EndForceShiftLock()
+        end
+    end)
+    if isConfirming then
+        if V then
+            EndForceShiftLock()
+            V = false
+        end
+    end
+    local g = nil
+    local GameSettings = UserSettings():GetService("UserGameSettings")
+    local J = nil
+    function ForceShiftLock()
+        local i, k = pcall(function()
+            return GameSettings.RotationType
+        end)
+        _ = i
+        g = k
+        J = ClonedService("RunService").RenderStepped:Connect(function()
+            pcall(function()
+                GameSettings.RotationType = Enum.RotationType.CameraRelative
+            end)
+        end)
+    end
+    function EndForceShiftLock()
+        if J then
+            pcall(function()
+                GameSettings.RotationType = g or Enum.RotationType.MovementRelative
+            end)
+            J:Disconnect()
+        end
+    end
+end
+
+coroutine.wrap(YDYMLAX_fake_script)()
+
 -- Connect event
 flyButton.MouseButton1Click:Connect(toggleFly)
 freezeButton.MouseButton1Click:Connect(togglePlayerFreeze)
@@ -2386,6 +2626,7 @@ voidButton.MouseButton1Click:Connect(toggleAntiVoid)
 fallButton.MouseButton1Click:Connect(toggleNoFallDamage)
 shiftlockButton.MouseButton1Click:Connect(hideShift)
 espButton.MouseButton1Click:Connect(toggleESP)
+noCFButton.MouseButton1Click:Connect(toggleNoCF)
 tpButton.MouseButton1Click:Connect(tpClick)
 infjumpButton.MouseButton1Click:Connect(toggleinf)
 noclipButton.MouseButton1Click:Connect(Nocliptoggle)
