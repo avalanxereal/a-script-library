@@ -14,6 +14,7 @@ local vars = {
     textButton6 = Instance.new("TextButton"),
     textButton7 = Instance.new("TextButton"),
     textButton8 = Instance.new("TextButton"),
+    uiListLayout = Instance.new("UIListLayout")
     Frame2 = Instance.new("ScrollingFrame"),
     Frame3 = Instance.new("Frame"),
     voidButton = Instance.new("TextButton"),
