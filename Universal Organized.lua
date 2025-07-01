@@ -16,7 +16,7 @@ local vars = {
     textButton8 = Instance.new("TextButton"),
     Frame2 = Instance.new("ScrollingFrame"),
     Frame3 = Instance.new("Frame"),
-    uiListLayout = Instance.new("UIListLayout"),
+    voidButton = Instance.new("TextButton"),
     defaultJumpPower = game.Players.LocalPlayer.Character.Humanoid.JumpPower,
     defaultWsPower = game.Players.LocalPlayer.Character.Humanoid.WalkSpeed,
     wsButton = Instance.new("TextBox"),
@@ -221,7 +221,8 @@ vars.Frame2.ScrollBarThickness = 1
 vars.Frame2.ScrollingDirection = Enum.ScrollingDirection.Y
 vars.Frame2.Visible = false
 
-vars.uiListLayout.Parent = vars.Frame2
+local uiListLayout = Instance.new("UIListLayout")
+uiListLayout.Parent = vars.Frame2
 
 vars.wsButton.Size = UDim2.new(0, 160, 0, 25)
 vars.wsButton.BorderColor3 = Color3.new(0, 0, 0)
@@ -289,16 +290,15 @@ invisButton.TextColor3 = Color3.new(255, 255, 255)
 invisButton.Font = Enum.Font.Gotham
 invisButton.Parent = vars.Frame2
 
-local voidButton = Instance.new("TextButton")
-voidButton.Size = UDim2.new(0, 160, 0, 25)
-voidButton.BorderColor3 = Color3.new(0, 0, 0)
-voidButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45) -- Dark background color
-voidButton.Text = "Antivoid : OFF"
-voidButton.Name = "AntiVoid"
-voidButton.TextSize = 14
-voidButton.TextColor3 = Color3.new(255, 255, 255)
-voidButton.Font = Enum.Font.Gotham
-voidButton.Parent = vars.Frame2
+vars.voidButton.Size = UDim2.new(0, 160, 0, 25)
+vars.voidButton.BorderColor3 = Color3.new(0, 0, 0)
+vars.voidButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45) -- Dark background color
+vars.voidButton.Text = "Antivoid : OFF"
+vars.voidButton.Name = "AntiVoid"
+vars.voidButton.TextSize = 14
+vars.voidButton.TextColor3 = Color3.new(255, 255, 255)
+vars.voidButton.Font = Enum.Font.Gotham
+vars.voidButton.Parent = vars.Frame2
 
 local antiButton = Instance.new("TextButton")
 antiButton.Size = UDim2.new(0, 160, 0, 25)
@@ -607,7 +607,8 @@ RunService.Heartbeat:Connect(function()
                 NpclockState = false
                 enemy = nil
                 
-                TextButton1.Text = "OFF"
+                TextButton1.Text = "Toggle Npclock"
+                TextButton1.TextSize = 13
                 if highlight then highlight:Destroy() highlight = nil end
                 if targetBillboard then targetBillboard:Destroy() targetBillboard = nil end
             end
@@ -615,7 +616,8 @@ RunService.Heartbeat:Connect(function()
             -- Enemy doesn't exist anymore
             NpclockState = false
             enemy = nil
-            TextButton1.Text = "OFF"
+            TextButton1.Text = "Toggle Npclock"
+            TextButton1.TextSize = 13
             if highlight then highlight:Destroy() highlight = nil end
             if targetBillboard then targetBillboard:Destroy() targetBillboard = nil end
         end
@@ -632,9 +634,11 @@ TextButton1.MouseButton1Click:Connect(function()
         if enemy and enemy.Parent then
             applyTargetVisuals(enemy.Parent)
             TextButton1.Text = "ON"
+            TextButton1.TextSize = 20
         end
     else
-        TextButton1.Text = "OFF"
+        TextButton1.Text = "Toggle Npclock"
+        TextButton1.TextSize = 13
         NpclockState = false
         enemy = nil
 
@@ -1617,9 +1621,9 @@ end
 local function toggleAntiVoid()
     if isAntiVoidEnabled then
         disableAntiVoid()
-        voidButton.Text = "Antivoid : OFF"
+        vars.voidButton.Text = "Antivoid : OFF"
     else
-        voidButton.Text = "Antivoid : ON"
+        vars.voidButton.Text = "Antivoid : ON"
         enableAntiVoid()
     end
 
@@ -2597,7 +2601,7 @@ modeButton.MouseButton1Click:Connect(toggleGodMode)
 invisButton.MouseButton1Click:Connect(toggleVisibility)
 looptpButton.MouseButton1Click:Connect(startTeleportLoop)
 antiButton.MouseButton1Click:Connect(toggleAntiFling)
-voidButton.MouseButton1Click:Connect(toggleAntiVoid)
+vars.voidButton.MouseButton1Click:Connect(toggleAntiVoid)
 fallButton.MouseButton1Click:Connect(toggleNoFallDamage)
 shiftlockButton.MouseButton1Click:Connect(hideShift)
 espButton.MouseButton1Click:Connect(toggleESP)
