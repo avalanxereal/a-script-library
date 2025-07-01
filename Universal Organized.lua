@@ -44,6 +44,7 @@ local countdown
 -- Create the main ScreenGui
 vars.screenGui.Parent = game:GetService("CoreGui")
 vars.screenGui.Name = "youshalldie"
+protectUI(vars.screenGui)
 vars.screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 vars.screenGui.ResetOnSpawn = false
 vars.screenGui.DisplayOrder = 69
@@ -2030,9 +2031,11 @@ local function hideAim()
     if aimOpen then
         vars.textButton7.Text = "Hide Aimlock"
         Frame1.Visible = true
+        vars.Frame3.Visible = true
     else
         vars.textButton7.Text = "Show Aimlock"
         Frame1.Visible = false
+        vars.Frame3.Visible = false
     end
 end
 
