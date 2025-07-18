@@ -2691,7 +2691,7 @@ end
 vars.destroyButton.MouseButton1Click:Connect(function()
     if not vars.isConfirmed then
         -- Start the countdown if not already confirming
-        countdownActive = true
+        vars.countdownActive = true
         startCountdown()
     else
         -- If confirming and the button is pressed again, destroy the GUI
