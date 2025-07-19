@@ -2211,7 +2211,7 @@ function equipAndActivate()
 				return tool
 			end
 		end
-		for _, tool in ipairs((player.Character or player.CharacterAdded:Wait()):GetChildren()) do
+		for _, tool in ipairs((vars.player.Character or player.CharacterAdded:Wait()):GetChildren()) do
 			if tool:IsA("Tool") and tool.Name == vars.selectedTools then
 				return tool
 			end
@@ -2236,7 +2236,7 @@ function equipAndActivate()
 					tool:Activate()
 				end)
 			end
-			task.wait(0.3)
+			task.wait(0.1)
 		end
 	end
 
