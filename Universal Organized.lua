@@ -2167,7 +2167,6 @@ local function toggleLoopCrate()
 end
 
 local weaponOpen = false
-local loopWeaponActive = false
 
 local function createNPC()
     dropdownOpen = not dropdownOpen
@@ -2206,13 +2205,13 @@ local loopCoroutine = nil
 function equipAndActivate()
 	if not vars.selectedTools or not vars.loopAttack then return end
 
-	function findTool()
+	local function findTool()
 		for _, tool in ipairs(backpack:GetChildren()) do
 			if tool:IsA("Tool") and tool.Name == vars.selectedTools then
 				return tool
 			end
 		end
-		for _, tool in ipairs((vars.player.Character or vars.player.CharacterAdded:Wait()):GetChildren()) do
+		for _, tool in ipairs((player.Character or player.CharacterAdded:Wait()):GetChildren()) do
 			if tool:IsA("Tool") and tool.Name == vars.selectedTools then
 				return tool
 			end
@@ -2220,37 +2219,34 @@ function equipAndActivate()
 		return nil
 	end
 
-	if loopCoroutine then
-		-- Stop previous loop by ending its condition
-		vars.loopAttack = false
-		task.wait() -- Let previous coroutine exit
-	end
+	local function loop()
+		while vars.loopAttack and vars.selectedTools do
+			local tool = findTool()
 
-	vars.loopAttack = true
-
-	loopCoroutine = coroutine.create(function()
-	while vars.loopAttack and vars.selectedTools do
-		local tool = findTool()
-		
-		-- Unequip any other tools currently held
-		for _, t in ipairs(character:GetChildren()) do
-			if t:IsA("Tool") and t.Name ~= vars.selectedTools then
-				t.Parent = backpack
+			-- Unequip other tools if any
+			for _, item in ipairs(character:GetChildren()) do
+				if item:IsA("Tool") and item.Name ~= vars.selectedTools then
+					item.Parent = backpack
+				end
 			end
-		end
 
-		if tool then
-			if tool.Parent ~= character then
+			if tool then
 				tool.Parent = character
+				pcall(function()
+					tool:Activate()
+				end)
 			end
-			pcall(function()
-				tool:Activate()
-			end)
+			task.wait(0.3)
 		end
-
-		task.wait(0.1)
 	end
-end)
+
+	if loopCoroutine and coroutine.status(loopCoroutine) ~= "dead" then
+		-- Avoid spawning duplicates
+		return
+	end
+
+	loopCoroutine = coroutine.create(loop)
+	coroutine.resume(loopCoroutine)
 end
 
 local function refreshToolDropdown()
