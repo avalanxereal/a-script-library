@@ -2201,10 +2201,12 @@ function clearDropdown()
 	vars.selectWeaponFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 end
 
+local loopCoroutine = nil
+
 function equipAndActivate()
 	if not vars.selectedTools or not vars.loopAttack then return end
 
-	local function findTool()
+	function findTool()
 		for _, tool in ipairs(backpack:GetChildren()) do
 			if tool:IsA("Tool") and tool.Name == vars.selectedTools then
 				return tool
@@ -2218,23 +2220,30 @@ function equipAndActivate()
 		return nil
 	end
 
-	local function loop()
+	if loopCoroutine then
+		-- Stop previous loop by ending its condition
+		vars.loopAttack = false
+		task.wait() -- Let previous coroutine exit
+	end
+
+	vars.loopAttack = true
+
+	loopCoroutine = coroutine.create(function()
 		while vars.loopAttack and vars.selectedTools do
 			local tool = findTool()
 			if tool then
 				if tool.Parent ~= character then
 					tool.Parent = character
-					task.wait(0.2) -- give time for equip to register
 				end
 				pcall(function()
 					tool:Activate()
 				end)
 			end
-			task.wait(0.1)
+			task.wait(0.3)
 		end
-	end
+	end)
 
-	coroutine.wrap(loop)()
+	coroutine.resume(loopCoroutine)
 end
 
 local function refreshToolDropdown()
@@ -2276,30 +2285,32 @@ local buttonCount2 = 0
 end
 
 toggleOnButton.MouseButton1Click:Connect(function()
-    vars.loopAttack = not vars.loopAttack
-    if vars.loopAttack then
-        if not vars.selectedTools then
-            game.StarterGui:SetCore("SendNotification", {
-                Title = "WARNING";
-                Text = "YOU NEED TO SELECT WEAPON FIRST";
-                Duration = 3;
-            })
-            vars.loopAttack = false
-            return
-        else
-            toggleOnButton.Text = "Auto Attack : ON"
-            equipAndActivate()
-            
-            equippedConnection = vars.player.CharacterAdded:Connect(function(char)
-                character = char
-                task.wait(1)
-                equipAndActivate()
-            end)
-        end
-    else
-        toggleOnButton.Text = "Auto Attack : OFF"
-        if equippedConnection then equippedConnection:Disconnect() end
-    end
+	vars.loopAttack = not vars.loopAttack
+
+	if vars.loopAttack then
+		if not vars.selectedTools then
+			game.StarterGui:SetCore("SendNotification", {
+				Title = "WARNING";
+				Text = "YOU NEED TO SELECT WEAPON FIRST";
+				Duration = 3;
+			})
+			vars.loopAttack = false
+			return
+		else
+			toggleOnButton.Text = "Auto Attack : ON"
+			equipAndActivate()
+
+			equippedConnection = vars.player.CharacterAdded:Connect(function(char)
+				character = char
+				task.wait(1)
+				equipAndActivate()
+			end)
+		end
+	else
+		toggleOnButton.Text = "Auto Attack : OFF"
+		vars.loopAttack = false
+		if equippedConnection then equippedConnection:Disconnect() end
+	end
 end)
 
 function toggleAutoEquip()
