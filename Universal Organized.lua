@@ -256,7 +256,7 @@ vars.Frame2.Size = UDim2.new(0, 161, 0, 100)
 vars.Frame2.ElasticBehavior = "Never"
 vars.Frame2.ClipsDescendants = true
 vars.Frame2.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
-vars.Frame2.CanvasSize = UDim2.new(0, 0, 0, 500)
+vars.Frame2.CanvasSize = UDim2.new(0, 0, 0, 525)
 vars.Frame2.ScrollBarThickness = 1
 vars.Frame2.ScrollingDirection = Enum.ScrollingDirection.Y
 vars.Frame2.Visible = false
@@ -291,7 +291,7 @@ toggleOnButton.Name = "autoattack"
 toggleOnButton.TextSize = 14
 toggleOnButton.TextColor3 = Color3.new(255, 255, 255)
 toggleOnButton.Font = Enum.Font.Gotham
-toggleOnButton.Parent = vars.selectWeaponFrame
+toggleOnButton.Parent = vars.Frame2
 
 vars.wsButton.Size = UDim2.new(0, 160, 0, 25)
 vars.wsButton.BorderColor3 = Color3.new(0, 0, 0)
@@ -1078,72 +1078,59 @@ local function updateButtonStyles()
     end
 end
 
--- Add these somewhere at the top where you define shared vars
-vars.connectionTeleportLoop = nil
-vars.connectionCharacterAdded = nil
-
 -- Slight change in handleNPCSelectionALT()
-function handleNPCSelectionALT(npc)
-    local delay = tonumber(delayTextBox.Text)
-
+function handleNPCSelectionALT(npc)  
+    local delay = tonumber(delayTextBox.Text)  
+  
     function teleportToNPC()
-    if vars.connectionTeleportLoop then
-        vars.connectionTeleportLoop:Disconnect()
-    end
+        local char = vars.player.Character  
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")  
 
-    -- One-time teleport immediately
-    local char = vars.player.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    local npcHRP = npc and npc:FindFirstChild("HumanoidRootPart")
-
-    if not npcHRP then
-        -- Try to find matching NPC by name if it despawned
-        for _, descendant in ipairs(workspace:GetDescendants()) do
-            if descendant:IsA("Model") and descendant:FindFirstChild("HumanoidRootPart") and descendant.Name == selectedNPC.Name then
-                npc = descendant
-                npcHRP = npc:FindFirstChild("HumanoidRootPart")
-                break
-            end
+        if hrp and npc and npc:FindFirstChild("HumanoidRootPart") then  
+                hrp.CFrame = npc.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)  
         end
-    end
-
-    if hrp and npcHRP then
-        hrp.CFrame = npcHRP.CFrame * CFrame.new(0, 0, 2)
-    end
-
-    -- Now setup loop if toggle is on
-    if teleportLoopActive then
-        vars.connectionTeleportLoop = game:GetService("RunService").Heartbeat:Connect(function()
-            local char = vars.player.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-
-            if not npc or not npc:FindFirstChild("HumanoidRootPart") then
-                npc = nil
-                for _, descendant in ipairs(workspace:GetDescendants()) do
-                    if descendant:IsA("Model") and descendant:FindFirstChild("HumanoidRootPart") and descendant.Name == selectedNPC.Name then
-                        npc = descendant
-                        break
-                    end
-                end
-                if not npc then return end
-            end
-
-            if hrp and npc and npc:FindFirstChild("HumanoidRootPart") then
-                hrp.CFrame = npc.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
-            end
-        end)
-    end
-
-    -- Handle character respawn
-    if vars.connectionCharacterAdded then
-        vars.connectionCharacterAdded:Disconnect()
-    end
-
-    vars.connectionCharacterAdded = vars.player.CharacterAdded:Connect(function()
-        repeat wait() until vars.player.Character and vars.player.Character:FindFirstChild("HumanoidRootPart")
-        teleportToNPC()
-    end)
-end
+        
+        if vars.connectionTeleportLoop then  
+            vars.connectionTeleportLoop:Disconnect()  
+        end  
+        
+        vars.connectionTeleportLoop = game:GetService("RunService").Heartbeat:Connect(function()  
+            if not teleportLoopActive then return end  
+  
+            local char = vars.player.Character  
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")  
+  
+            if not npc or not npc:FindFirstChild("HumanoidRootPart") then  
+                npc = nil  
+                -- Search for new matching NPC by name  
+                for _, descendant in ipairs(workspace:GetDescendants()) do  
+                    if descendant:IsA("Model") and descendant:FindFirstChild("HumanoidRootPart") and descendant.Name == selectedNPC.Name then  
+                        npc = descendant  
+                        break  
+                    end  
+                end  
+                if not npc then return end  
+            end  
+  
+            if hrp and npc and npc:FindFirstChild("HumanoidRootPart") then  
+                hrp.CFrame = npc.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)  
+            end  
+        end)  
+  
+        -- Handle character respawn  
+        if vars.connectionCharacterAdded then  
+            vars.connectionCharacterAdded:Disconnect()  
+        end  
+  
+        vars.connectionCharacterAdded = vars.player.CharacterAdded:Connect(function()  
+            repeat wait() until vars.player.Character and vars.player.Character:FindFirstChild("HumanoidRootPart")  
+            teleportToNPC()  
+        end)  
+    end  
+  
+    if vars.player.Character and vars.player.Character:FindFirstChild("HumanoidRootPart") then  
+        teleportToNPC()  
+    end  
 end
 
 local function refreshDropdown()
@@ -2180,6 +2167,7 @@ end
 
 local weaponOpen = false
 local loopWeaponActive = false
+local buttonCount2 = 0
 
 local function createNPC()
     dropdownOpen = not dropdownOpen
@@ -2196,7 +2184,7 @@ local function createNPC()
         vars.textButton6.Text = "Open NPC List"
         if weaponOpen then
             dropdownFrame.Visible = false
-            selectWeaponFrame.Visible = true
+            vars.selectWeaponFrame.Visible = true
         else
             dropdownFrame.Visible = false
         end
@@ -2214,6 +2202,7 @@ function clearDropdown()
 			child:Destroy()
 		end
 	end
+    buttonCount2 = 0
 	vars.selectWeaponFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 end
 
@@ -2257,6 +2246,7 @@ local function refreshToolDropdown()
 
 	for _, tool in ipairs(tools) do
 		if tool:IsA("Tool") then
+		    buttonCount = buttonCount + 1 
 			local button = Instance.new("TextButton")
 			button.Size = UDim2.new(0, 160, 0, 25)
 			button.Position = UDim2.new(0, 0, 0, ySize)
@@ -2279,11 +2269,10 @@ local function refreshToolDropdown()
 			end)
 		end
 	end
+    local buttonHeight = 26
+    local totalHeight = buttonCount2 * buttonHeight
+    vars.selectWeaponFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
 
-	vars.selectWeaponFrame.CanvasSize = UDim2.new(
-    0, vars.selectWeaponFrame.CanvasSize.X.Offset,
-    0, vars.selectWeaponFrame.CanvasSize.Y.Offset + ySize
-    )
 end
 
 toggleOnButton.MouseButton1Click:Connect(function()
