@@ -2175,6 +2175,7 @@ local function createNPC()
         vars.textButton6.Text = "Hide NPC List"
         if weaponOpen then
             dropdownFrame.Visible = true
+            vars.textButton3.Text = "Show Tools List"
             vars.selectWeaponFrame.Visible = false
         else
             dropdownFrame.Visible = true
@@ -2182,12 +2183,7 @@ local function createNPC()
         refreshDropdown()
     else
         vars.textButton6.Text = "Open NPC List"
-        if weaponOpen then
-            dropdownFrame.Visible = false
-            vars.selectWeaponFrame.Visible = true
-        else
-            dropdownFrame.Visible = false
-        end
+        dropdownFrame.Visible = false
     end
 end
 
@@ -2246,8 +2242,7 @@ local function refreshToolDropdown()
 
 	for _, tool in ipairs(tools) do
 		if tool:IsA("Tool") then
-		    buttonCount = buttonCount + 1 
-			local button = Instance.new("TextButton")
+		    local button = Instance.new("TextButton")
 			button.Size = UDim2.new(0, 160, 0, 25)
 			button.Position = UDim2.new(0, 0, 0, ySize)
 			button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
@@ -2259,6 +2254,8 @@ local function refreshToolDropdown()
 			button.Font = Enum.Font.Gotham
 			button.Parent = vars.selectWeaponFrame
 
+		    buttonCount = buttonCount + 1 
+		    
 			button.MouseButton1Click:Connect(function()
 				vars.selectedTools = tool.Name
 				for _, btn in ipairs(vars.selectWeaponFrame:GetChildren()) do
@@ -2272,19 +2269,18 @@ local function refreshToolDropdown()
     local buttonHeight = 26
     local totalHeight = buttonCount2 * buttonHeight
     vars.selectWeaponFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
-
 end
 
 toggleOnButton.MouseButton1Click:Connect(function()
-    loopAttack = not loopAttack
-    if loopAttack then
+    vars.loopAttack = not vars.loopAttack
+    if vars.loopAttack then
         if not vars.selectedTools then
             game.StarterGui:SetCore("SendNotification", {
                 Title = "WARNING";
                 Text = "YOU NEED TO SELECT WEAPON FIRST";
                 Duration = 3;
             })
-            loopAttack = false
+            vars.loopAttack = false
             return
         else
             toggleOnButton.Text = "Auto Attack : ON"
@@ -2307,6 +2303,7 @@ function toggleAutoEquip()
     if weaponOpen then
         if dropdownOpen then
             vars.textButton3.Text = "Hide Auto Attack Menu"
+            vars.textButton6.Text = "Open NPC List"
             dropdownFrame.Visible = false
             refreshToolDropdown()
             vars.selectWeaponFrame.Visible = true
@@ -2318,7 +2315,6 @@ function toggleAutoEquip()
     else
         if dropdownOpen then
             vars.textButton3.Text = "Show Auto Attack Menu"
-            dropdownFrame.Visible = true
             vars.selectWeaponFrame.Visible = false
         else
             vars.textButton3.Text = "Show Auto Attack Menu"
