@@ -2167,7 +2167,6 @@ end
 
 local weaponOpen = false
 local loopWeaponActive = false
-local buttonCount2 = 0
 
 local function createNPC()
     dropdownOpen = not dropdownOpen
@@ -2198,7 +2197,6 @@ function clearDropdown()
 			child:Destroy()
 		end
 	end
-    buttonCount2 = 0
 	vars.selectWeaponFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 end
 
@@ -2239,6 +2237,7 @@ local function refreshToolDropdown()
 
 	local tools = backpack:GetChildren()
 	local ySize = 25
+local buttonCount2 = 0    
 
 	for _, tool in ipairs(tools) do
 		if tool:IsA("Tool") then
