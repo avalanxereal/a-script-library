@@ -2212,7 +2212,7 @@ function equipAndActivate()
 				return tool
 			end
 		end
-		for _, tool in ipairs((player.Character or player.CharacterAdded:Wait()):GetChildren()) do
+		for _, tool in ipairs((vars.player.Character or vars.player.CharacterAdded:Wait()):GetChildren()) do
 			if tool:IsA("Tool") and tool.Name == vars.selectedTools then
 				return tool
 			end
@@ -2389,9 +2389,12 @@ local function toggleButtonsVisibility()
     vars.textButton7.Visible = not visible
     vars.textButton8.Visible = not visible
     vars.textButton6.Text = "Open NPC List"
+    vars.textButton3.Text = "Show Weapon List"
     vars.textButton8.Text = "Open Player Editor"
     dropdownOpen = false
+    weaponOpen = false
     editor = false
+    vars.selectWeaponFrame.Visible = false
     vars.Frame2.Visible = false
     dropdownFrame.Visible = false
     delayTextBox.Visible = not visible
