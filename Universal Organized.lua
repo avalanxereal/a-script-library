@@ -281,6 +281,7 @@ uiListLayout.Parent = vars.Frame2
 
 local uiListLay = Instance.new("UIListLayout")
 uiListLay.Parent = vars.selectWeaponFrame
+uiListLay.Padding = UDim.new(0, 3)
 
 local toggleOnButton = Instance.new("TextButton")
 toggleOnButton.Size = UDim2.new(0, 160, 0, 25)
@@ -2203,7 +2204,7 @@ end
 function equipAndActivate()
 	if not vars.selectedTools or not vars.loopAttack then return end
 
-	function findTool()
+	local function findTool()
 		for _, tool in ipairs(backpack:GetChildren()) do
 			if tool:IsA("Tool") and tool.Name == vars.selectedTools then
 				return tool
@@ -2217,18 +2218,22 @@ function equipAndActivate()
 		return nil
 	end
 
-	function loop()
+	local function loop()
 		while vars.loopAttack and vars.selectedTools do
 			local tool = findTool()
 			if tool then
-				tool.Parent = character
+				if tool.Parent ~= character then
+					tool.Parent = character
+					task.wait(0.2) -- give time for equip to register
+				end
 				pcall(function()
 					tool:Activate()
 				end)
 			end
-			task.wait(0.3)
+			task.wait(0.1)
 		end
 	end
+
 	coroutine.wrap(loop)()
 end
 
