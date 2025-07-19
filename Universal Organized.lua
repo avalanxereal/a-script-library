@@ -2254,7 +2254,7 @@ local function refreshToolDropdown()
 			button.Font = Enum.Font.Gotham
 			button.Parent = vars.selectWeaponFrame
 
-		    buttonCount = buttonCount + 1 
+		    buttonCount2 = buttonCount2 + 1 
 		    
 			button.MouseButton1Click:Connect(function()
 				vars.selectedTools = tool.Name
