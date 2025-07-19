@@ -199,7 +199,7 @@ vars.textButton3.Parent = vars.screenGui
 vars.textButton4.Size = UDim2.new(0, 160, 0, 30) -- Adjusted size
 vars.textButton4.BorderColor3 = Color3.fromRGB(0, 0, 0)
 vars.textButton4.Position = UDim2.new(0, 10, 1, -150) -- Position below the third button
-vars.textButton4.Text = "Loop Remote Script : OFF"
+vars.textButton4.Text = "Notify Spawned NPC : OFF"
 vars.textButton4.BackgroundColor3 = Color3.fromRGB(45, 45, 45) -- Dark background color
 vars.textButton4.TextColor3 = Color3.new(1, 1, 1) -- White text color
 vars.textButton4.Font = Enum.Font.Gotham
@@ -1984,48 +1984,61 @@ local function startTeleportLoop()
 end
 
 local npcFolder1 = game:GetService("Workspace")
-local monitoring = true
+local monitoring = false
 local spawnedNPCs = {}
+local connections = {}
 
 local function notifyNewNPC(npcName)
-    game.StarterGui:SetCore("SendNotification", {
-        Title = "NOTIFICATION",
-        Text = npcName .. " has spawned!",
-        Duration = 5,
-    })
+	game.StarterGui:SetCore("SendNotification", {
+		Title = "NOTIFICATION",
+		Text = npcName .. " has spawned!",
+		Duration = 5,
+	})
 end
 
 local function onNPCAdded(npc)
-    if npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") and not game.Players:FindFirstChild(npc.Name) then
-        if not spawnedNPCs[npc.Name] then
-            notifyNewNPC(npc.Name)
-            spawnedNPCs[npc.Name] = true
-        end
-    end
+	if npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") and not game.Players:FindFirstChild(npc.Name) then
+		if not spawnedNPCs[npc.Name] then
+			notifyNewNPC(npc.Name)
+			spawnedNPCs[npc.Name] = true
+		end
+	end
+end
+
+local function onNPCRemoved(npc)
+	if spawnedNPCs[npc.Name] then
+		spawnedNPCs[npc.Name] = nil
+	end
 end
 
 local function startMonitoring()
-    if not game.CoreGui:FindFirstChild("youshalldie") then
-        monitoring = false
-        return
-    end
-    
-    -- Initial population of spawned NPCs
-    for _, npc in ipairs(npcFolder1:GetDescendants()) do
-        onNPCAdded(npc)
-    end
+	if monitoring then return end
+	if not game.CoreGui:FindFirstChild("youshalldie") then return end
 
-    -- Set up event listeners
-    npcFolder1.DescendantAdded:Connect(onNPCAdded)
-    npcFolder1.DescendantRemoving:Connect(function(npc)
-        if spawnedNPCs[npc.Name] then
-            spawnedNPCs[npc.Name] = nil
-        end
-    end)
+	monitoring = true
+
+	-- Initial population
+	for _, npc in ipairs(npcFolder1:GetDescendants()) do
+		onNPCAdded(npc)
+	end
+
+	-- Save connections so we can disconnect them later
+	table.insert(connections, npcFolder1.DescendantAdded:Connect(onNPCAdded))
+	table.insert(connections, npcFolder1.DescendantRemoving:Connect(onNPCRemoved))
 end
 
-spawn(startMonitoring)
+local function stopMonitoring()
+	if not monitoring then return end
+	monitoring = false
 
+	for _, conn in ipairs(connections) do
+		if conn.Connected then
+			conn:Disconnect()
+		end
+	end
+	table.clear(connections)
+	table.clear(spawnedNPCs)
+end
 local loopKill = false
 local function toggleLoopKill()
     loopKill = not loopKill
@@ -2046,84 +2059,17 @@ local function toggleLoopKill()
 end
 
 
-local loopRemote = false
-local function toggleLoopRemote()
-    loopRemote = not loopRemote
+local notificationToggle = false
 
-    if loopRemote then
-        vars.textButton4.Text = "Loop Remote Script : ON"
-        while loopRemote do
-            local player = game:GetService("Players").LocalPlayer
-            local character = vars.player.Character
-            local equippedTool = character:FindFirstChildOfClass("Tool") -- Get currently equipped tool
-
-            if equippedTool then
-                -- Reset foundRemotes for the new tool
-                local foundRemotes = {
-                    X = nil,
-                    Z = nil,
-                    C = nil,
-                    V = nil
-                }
-
-                -- Search for RemoteEvents across the tool's descendants
-                for _, descendant in ipairs(equippedTool:GetDescendants()) do
-                    if descendant:IsA("RemoteEvent") then
-                        if descendant.Name == "X" then
-                            foundRemotes.X = descendant
-                        elseif descendant.Name == "Z" then
-                            foundRemotes.Z = descendant
-                        elseif descendant.Name == "C" then
-                            foundRemotes.C = descendant
-                        elseif descendant.Name == "V" then
-                            foundRemotes.V = descendant
-                        end
-                    end
-                end
-
-                -- Fire the RemoteEvents one by one with a 1-second delay between each
-                if foundRemotes.Z then
-                    foundRemotes.Z:FireServer()
-                    wait(0.5) -- Wait 1 second before firing the next
-                else
-                    warn("Skill Z RemoteEvent not found in tool: " .. equippedTool.Name)
-                end
-
-                if foundRemotes.X then
-                    foundRemotes.X:FireServer()
-                    wait(0.5) -- Wait 1 second before firing the next
-                else
-                    warn("Skill X RemoteEvent not found in tool: " .. equippedTool.Name)
-                end
-
-                if foundRemotes.C then
-                    foundRemotes.C:FireServer()
-                    wait(0.5) -- Wait 1 second before firing the next
-                else
-                    warn("Skill C RemoteEvent not found in tool: " .. equippedTool.Name)
-                end
-
-                if foundRemotes.V then
-                    foundRemotes.V:FireServer()
-                else
-                    warn("Skill V RemoteEvent not found in tool: " .. equippedTool.Name)
-                end
-            else
-                warn("No tool is currently equipped")
-            end
-
-            -- Handle delay input for the loop
-            local delay = tonumber(delayTextBox.Text)
-            if not delay or delay <= 0 then
-                delay = 2 -- Default delay if input is invalid
-                delayTextBox.Text = tostring(delay)
-            end
-
-            wait(delay) -- Wait after all remotes are fired before starting the next loop
-        end
-    else
-        vars.textButton4.Text = "Loop Remote Script : OFF"
-    end
+function toggleNotifications()
+	notificationToggle = not notificationToggle
+	if notificationToggle then
+	    vars.textButton4.Text = "Notify Spawned NPC : ON"
+	    startMonitoring()
+	else
+	    vars.textButton4.Text = "Notify Spawned NPC : OFF"
+	    stopMonitoring()
+	end
 end
 
 local loopCrateReal = false
@@ -2940,7 +2886,7 @@ delayTextBox.FocusLost:Connect(validateDelay)
 vars.textButton1.MouseButton1Click:Connect(executeKillScript)
 vars.textButton2.MouseButton1Click:Connect(toggleLoopKill)
 vars.textButton3.MouseButton1Click:Connect(toggleAutoEquip)
-vars.textButton4.MouseButton1Click:Connect(toggleLoopRemote)
+vars.textButton4.MouseButton1Click:Connect(toggleNotifications)
 vars.textButton5.MouseButton1Click:Connect(toggleLoopCrate)
 vars.textButton6.MouseButton1Click:Connect(createNPC)
 vars.textButton7.MouseButton1Click:Connect(hideAim)
