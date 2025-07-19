@@ -46,6 +46,8 @@ local vars = {
     Wait = task.wait,
     connectionCF = nil,
     connectionRoot = nil,
+    connectionCharacterAdded = nil,
+    connectionTeleportLoop = nil,
     AntiCFrame = false,
     defaultJpSize = nil,
     defaultJpPos = nil,
@@ -1044,75 +1046,55 @@ local function updateButtonStyles()
     end
 end
 
-local function handleNPCSelectionALT(npc)
+-- Add these somewhere at the top where you define shared vars
+vars.connectionTeleportLoop = nil
+vars.connectionCharacterAdded = nil
+
+-- Slight change in handleNPCSelectionALT()
+function handleNPCSelectionALT(npc)
     local delay = tonumber(delayTextBox.Text)
-    
-    -- Function to teleport vars.player to the NPC
-    local function teleportToNPC()
-        if vars.player.Character and vars.player.Character:FindFirstChild("HumanoidRootPart") and npc and npc:FindFirstChild("HumanoidRootPart") then
-            if teleportLoopActive then
-                coroutine.wrap(function()
-                    while teleportLoopActive do
-                        if vars.player.Character:FindFirstChild("HumanoidRootPart") and npc:FindFirstChild("HumanoidRootPart") then
-                            vars.player.Character.HumanoidRootPart.CFrame = npc.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
-                            task.wait(0.01)
-                        else
-                            -- Handle missing NPC or vars.player HRP logic
-                            selectedNPCALT = nil
-                            selectedNPC = nil
-                            updateButtonStyles()
-                            warn("The selected NPC or vars.player HRP has despawned or does not exist. Waiting for respawn...")
-                            
-                            -- Wait until the NPC and vars.player HRP respawn
-                            while not (npc and npc:FindFirstChild("HumanoidRootPart")) and teleportLoopActive do
-                                wait(1) -- Wait for 1 second before re-checking
-                                -- Re-check for NPC respawn
-                                npc = nil
-                                for _, descendant in ipairs(workspace:GetDescendants()) do
-                                    if descendant:IsA("Model") and descendant:FindFirstChild("HumanoidRootPart") and descendant.Name == selectedNPCALT then
-                                        npc = descendant
-                                        break
-                                    end
-                                end
-                            end
 
-                            -- Wait until vars.player's HRP is available if it's not valid
-                            while not vars.player.Character:FindFirstChild("HumanoidRootPart") and teleportLoopActive do
-                                wait(1) -- Wait for 1 second before re-checking
-                            end
-
-                            -- Check if NPC has respawned
-                            if npc and npc:FindFirstChild("HumanoidRootPart") then
-                                warn("The selected NPC has respawned.")
-                            end
-                        end
-                        wait(0.1)
-                    end
-                end)()
-            else
-                -- If teleport loop is not active, teleport vars.player once
-                vars.player.Character.HumanoidRootPart.CFrame = npc.HumanoidRootPart.CFrame
-            end
-        else
-            -- Handle cases where HRP or NPC is invalid
-            selectedNPCALT = nil
-            selectedNPC = nil
-            updateButtonStyles()
-            warn("The selected NPC or vars.player HRP has despawned or does not exist.")
+    function teleportToNPC()
+        if vars.connectionTeleportLoop then
+            vars.connectionTeleportLoop:Disconnect()
         end
-    end
 
-    -- Check if HRP is immediately available
-    if vars.player.Character and vars.player.Character:FindFirstChild("HumanoidRootPart") then
-        teleportToNPC()
-    else
-        -- Wait for vars.player's HRP to become available
-        vars.player.CharacterAdded:Connect(function()
-            repeat
-                wait(1)
-            until vars.player.Character and vars.player.Character:FindFirstChild("HumanoidRootPart")
+        vars.connectionTeleportLoop = game:GetService("RunService").Heartbeat:Connect(function()
+            if not teleportLoopActive then return end
+
+            local char = vars.player.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+            if not npc or not npc:FindFirstChild("HumanoidRootPart") then
+                npc = nil
+                -- Search for new matching NPC by name
+                for _, descendant in ipairs(workspace:GetDescendants()) do
+                    if descendant:IsA("Model") and descendant:FindFirstChild("HumanoidRootPart") and descendant.Name == selectedNPC.Name then
+                        npc = descendant
+                        break
+                    end
+                end
+                if not npc then return end
+            end
+
+            if hrp and npc and npc:FindFirstChild("HumanoidRootPart") then
+                hrp.CFrame = npc.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
+            end
+        end)
+
+        -- Handle character respawn
+        if vars.connectionCharacterAdded then
+            vars.connectionCharacterAdded:Disconnect()
+        end
+
+        vars.connectionCharacterAdded = vars.player.CharacterAdded:Connect(function()
+            repeat wait() until vars.player.Character and vars.player.Character:FindFirstChild("HumanoidRootPart")
             teleportToNPC()
         end)
+    end
+
+    if vars.player.Character and vars.player.Character:FindFirstChild("HumanoidRootPart") then
+        teleportToNPC()
     end
 end
 
