@@ -2229,21 +2229,28 @@ function equipAndActivate()
 	vars.loopAttack = true
 
 	loopCoroutine = coroutine.create(function()
-		while vars.loopAttack and vars.selectedTools do
-			local tool = findTool()
-			if tool then
-				if tool.Parent ~= character then
-					tool.Parent = character
-				end
-				pcall(function()
-					tool:Activate()
-				end)
+	while vars.loopAttack and vars.selectedTools do
+		local tool = findTool()
+		
+		-- Unequip any other tools currently held
+		for _, t in ipairs(character:GetChildren()) do
+			if t:IsA("Tool") and t.Name ~= vars.selectedTools then
+				t.Parent = backpack
 			end
-			task.wait(0.3)
 		end
-	end)
 
-	coroutine.resume(loopCoroutine)
+		if tool then
+			if tool.Parent ~= character then
+				tool.Parent = character
+			end
+			pcall(function()
+				tool:Activate()
+			end)
+		end
+
+		task.wait(0.1)
+	end
+end)
 end
 
 local function refreshToolDropdown()
