@@ -18,6 +18,7 @@ local vars = {
     textButton8 = Instance.new("TextButton"),
     uiListLayout = Instance.new("UIListLayout"),
     Frame2 = Instance.new("ScrollingFrame"),
+    selectWeaponFrame = Instance.new("ScrollingFrame"),
     Frame3 = Instance.new("Frame"),
     uiButton = Instance.new("TextButton"),
     voidButton = Instance.new("TextButton"),
@@ -49,6 +50,8 @@ local vars = {
     connectionCharacterAdded = nil,
     connectionTeleportLoop = nil,
     AntiCFrame = false,
+    selectedTools = nil,
+    loopAttack = nil,
     defaultJpSize = nil,
     defaultJpPos = nil,
     defaultTsSize = nil,
@@ -186,7 +189,7 @@ vars.textButton2.Parent = vars.screenGui
 vars.textButton3.Size = UDim2.new(0, 160, 0, 30) -- Adjusted size
 vars.textButton3.BorderColor3 = Color3.fromRGB(0, 0, 0)
 vars.textButton3.Position = UDim2.new(0, 10, 1, -180) -- Position below the second button
-vars.textButton3.Text = "Auto Equip Tools : OFF"
+vars.textButton3.Text = "Show Auto Attack Menu"
 vars.textButton3.BackgroundColor3 = Color3.fromRGB(45, 45, 45) -- Dark background color
 vars.textButton3.TextColor3 = Color3.new(1, 1, 1) -- White text color
 vars.textButton3.Font = Enum.Font.Gotham
@@ -258,8 +261,37 @@ vars.Frame2.ScrollBarThickness = 1
 vars.Frame2.ScrollingDirection = Enum.ScrollingDirection.Y
 vars.Frame2.Visible = false
 
+vars.selectWeaponFrame.Parent = vars.screenGui
+vars.selectWeaponFrame.Name = "selectweapon"
+vars.selectWeaponFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+vars.selectWeaponFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+vars.selectWeaponFrame.BorderSizePixel = 1
+vars.selectWeaponFrame.Position = UDim2.new(0, 340, 1, -270)
+vars.selectWeaponFrame.Size = UDim2.new(0, 161, 0, 100)
+vars.selectWeaponFrame.ElasticBehavior = "Never"
+vars.selectWeaponFrame.ClipsDescendants = true
+vars.selectWeaponFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+vars.selectWeaponFrame.CanvasSize = UDim2.new(0, 0, 0, 25)
+vars.selectWeaponFrame.ScrollBarThickness = 1
+vars.selectWeaponFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+vars.selectWeaponFrame.Visible = false
+
 local uiListLayout = Instance.new("UIListLayout")
 uiListLayout.Parent = vars.Frame2
+
+local uiListLay = Instance.new("UIListLayout")
+uiListLay.Parent = vars.selectWeaponFrame
+
+local toggleOnButton = Instance.new("TextButton")
+toggleOnButton.Size = UDim2.new(0, 160, 0, 25)
+toggleOnButton.BorderColor3 = Color3.new(0, 0, 0)
+toggleOnButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45) -- Dark background color
+toggleOnButton.Text = "Auto Attack : OFF"
+toggleOnButton.Name = "autoattack"
+toggleOnButton.TextSize = 14
+toggleOnButton.TextColor3 = Color3.new(255, 255, 255)
+toggleOnButton.Font = Enum.Font.Gotham
+toggleOnButton.Parent = vars.selectWeaponFrame
 
 vars.wsButton.Size = UDim2.new(0, 160, 0, 25)
 vars.wsButton.BorderColor3 = Color3.new(0, 0, 0)
@@ -1055,19 +1087,38 @@ function handleNPCSelectionALT(npc)
     local delay = tonumber(delayTextBox.Text)
 
     function teleportToNPC()
-        if vars.connectionTeleportLoop then
-            vars.connectionTeleportLoop:Disconnect()
+    if vars.connectionTeleportLoop then
+        vars.connectionTeleportLoop:Disconnect()
+    end
+
+    -- One-time teleport immediately
+    local char = vars.player.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local npcHRP = npc and npc:FindFirstChild("HumanoidRootPart")
+
+    if not npcHRP then
+        -- Try to find matching NPC by name if it despawned
+        for _, descendant in ipairs(workspace:GetDescendants()) do
+            if descendant:IsA("Model") and descendant:FindFirstChild("HumanoidRootPart") and descendant.Name == selectedNPC.Name then
+                npc = descendant
+                npcHRP = npc:FindFirstChild("HumanoidRootPart")
+                break
+            end
         end
+    end
 
+    if hrp and npcHRP then
+        hrp.CFrame = npcHRP.CFrame * CFrame.new(0, 0, 2)
+    end
+
+    -- Now setup loop if toggle is on
+    if teleportLoopActive then
         vars.connectionTeleportLoop = game:GetService("RunService").Heartbeat:Connect(function()
-            if not teleportLoopActive then return end
-
             local char = vars.player.Character
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
 
             if not npc or not npc:FindFirstChild("HumanoidRootPart") then
                 npc = nil
-                -- Search for new matching NPC by name
                 for _, descendant in ipairs(workspace:GetDescendants()) do
                     if descendant:IsA("Model") and descendant:FindFirstChild("HumanoidRootPart") and descendant.Name == selectedNPC.Name then
                         npc = descendant
@@ -1081,21 +1132,18 @@ function handleNPCSelectionALT(npc)
                 hrp.CFrame = npc.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
             end
         end)
-
-        -- Handle character respawn
-        if vars.connectionCharacterAdded then
-            vars.connectionCharacterAdded:Disconnect()
-        end
-
-        vars.connectionCharacterAdded = vars.player.CharacterAdded:Connect(function()
-            repeat wait() until vars.player.Character and vars.player.Character:FindFirstChild("HumanoidRootPart")
-            teleportToNPC()
-        end)
     end
 
-    if vars.player.Character and vars.player.Character:FindFirstChild("HumanoidRootPart") then
+    -- Handle character respawn
+    if vars.connectionCharacterAdded then
+        vars.connectionCharacterAdded:Disconnect()
+    end
+
+    vars.connectionCharacterAdded = vars.player.CharacterAdded:Connect(function()
+        repeat wait() until vars.player.Character and vars.player.Character:FindFirstChild("HumanoidRootPart")
         teleportToNPC()
-    end
+    end)
+end
 end
 
 local function refreshDropdown()
@@ -2009,54 +2057,6 @@ local function toggleLoopKill()
     end
 end
 
-local autoEquip = false
-local lastTools = {}
-
-local function store()
-    
-    local backpack = vars.player:FindFirstChildOfClass("Backpack")
-
-    if backpack then
-        for _, tool in ipairs(backpack:GetChildren()) do
-            if tool:IsA("Tool") then
-                table.insert(lastTools, tool.Name)
-            end
-        end
-    end
-end
-
-store()
-
-local function toggleAutoEquip()
-    autoEquip = not autoEquip
-    
-    local backpack = vars.player:FindFirstChildOfClass("Backpack")
-    
-    -- Capture the last tools in the backpack before toggling
-    
-    if autoEquip then
-        vars.textButton3.Text = "Auto Equip Tools : ON"
-        while autoEquip do
-            if backpack and not vars.player.Character:FindFirstChildOfClass("Tool") then
-                for _, tool in pairs(backpack:GetChildren()) do
-                    if tool:IsA("Tool") and not table.find(lastTools, tool.Name) then
-                        tool.Parent = vars.player.Character
-                        local args = {
-                            [1] = "Item",
-                            [2] = "Keep"
-                        }
-                        game:GetService("ReplicatedStorage").RemoteEvent.InventoryEvent:FireServer(unpack(args))
-                        wait(0.1)
-                        break
-                    end
-                end
-            end
-            wait(0.5)
-        end
-    else
-        vars.textButton3.Text = "Auto Equip Tools : OFF"
-    end
-end
 
 local loopRemote = false
 local function toggleLoopRemote()
@@ -2178,15 +2178,163 @@ local function toggleLoopCrate()
     end
 end
 
+local weaponOpen = false
+local loopWeaponActive = false
+
 local function createNPC()
     dropdownOpen = not dropdownOpen
     if dropdownOpen then
         vars.textButton6.Text = "Hide NPC List"
-        dropdownFrame.Visible = true
+        if weaponOpen then
+            dropdownFrame.Visible = true
+            vars.selectWeaponFrame.Visible = false
+        else
+            dropdownFrame.Visible = true
+        end
         refreshDropdown()
     else
         vars.textButton6.Text = "Open NPC List"
-        dropdownFrame.Visible = false
+        if weaponOpen then
+            dropdownFrame.Visible = false
+            selectWeaponFrame.Visible = true
+        else
+            dropdownFrame.Visible = false
+        end
+    end
+end
+
+local character = vars.player.Character or player.CharacterAdded:Wait()
+local backpack = vars.player:WaitForChild("Backpack")
+
+local equippedConnection
+
+function clearDropdown()
+	for _, child in pairs(vars.selectWeaponFrame:GetChildren()) do
+		if child:IsA("TextButton") and child.Name ~= "autoattack" then
+			child:Destroy()
+		end
+	end
+	vars.selectWeaponFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+end
+
+function equipAndActivate()
+	if not vars.selectedTools or not vars.loopAttack then return end
+
+	function findTool()
+		for _, tool in ipairs(backpack:GetChildren()) do
+			if tool:IsA("Tool") and tool.Name == vars.selectedTools then
+				return tool
+			end
+		end
+		for _, tool in ipairs((player.Character or player.CharacterAdded:Wait()):GetChildren()) do
+			if tool:IsA("Tool") and tool.Name == vars.selectedTools then
+				return tool
+			end
+		end
+		return nil
+	end
+
+	function loop()
+		while vars.loopAttack and vars.selectedTools do
+			local tool = findTool()
+			if tool then
+				tool.Parent = character
+				pcall(function()
+					tool:Activate()
+				end)
+			end
+			task.wait(0.3)
+		end
+	end
+	coroutine.wrap(loop)()
+end
+
+local function refreshToolDropdown()
+	clearDropdown()
+
+	local tools = backpack:GetChildren()
+	local ySize = 25
+
+	for _, tool in ipairs(tools) do
+		if tool:IsA("Tool") then
+			local button = Instance.new("TextButton")
+			button.Size = UDim2.new(0, 160, 0, 25)
+			button.Position = UDim2.new(0, 0, 0, ySize)
+			button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+			button.BorderColor3 = (tool.Name == vars.selectedTools) and Color3.fromRGB(0, 255, 0) or Color3.new(0, 0, 0)
+			button.Text = tool.Name
+			button.Name = tool.Name
+			button.TextSize = 14
+			button.TextColor3 = Color3.new(1, 1, 1)
+			button.Font = Enum.Font.Gotham
+			button.Parent = vars.selectWeaponFrame
+
+			button.MouseButton1Click:Connect(function()
+				vars.selectedTools = tool.Name
+				for _, btn in ipairs(vars.selectWeaponFrame:GetChildren()) do
+					if btn:IsA("TextButton") then
+						btn.BorderColor3 = (btn.Name == vars.selectedTools) and Color3.fromRGB(0, 255, 0) or Color3.new(0, 0, 0)
+					end
+				end
+			end)
+		end
+	end
+
+	vars.selectWeaponFrame.CanvasSize = UDim2.new(
+    0, vars.selectWeaponFrame.CanvasSize.X.Offset,
+    0, vars.selectWeaponFrame.CanvasSize.Y.Offset + ySize
+    )
+end
+
+toggleOnButton.MouseButton1Click:Connect(function()
+    loopAttack = not loopAttack
+    if loopAttack then
+        if not vars.selectedTools then
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "WARNING";
+                Text = "YOU NEED TO SELECT WEAPON FIRST";
+                Duration = 3;
+            })
+            loopAttack = false
+            return
+        else
+            toggleOnButton.Text = "Auto Attack : ON"
+            equipAndActivate()
+            
+            equippedConnection = vars.player.CharacterAdded:Connect(function(char)
+                character = char
+                task.wait(1)
+                equipAndActivate()
+            end)
+        end
+    else
+        toggleOnButton.Text = "Auto Attack : OFF"
+        if equippedConnection then equippedConnection:Disconnect() end
+    end
+end)
+
+function toggleAutoEquip()
+    weaponOpen = not weaponOpen
+    if weaponOpen then
+        if dropdownOpen then
+            vars.textButton3.Text = "Hide Auto Attack Menu"
+            dropdownFrame.Visible = false
+            refreshToolDropdown()
+            vars.selectWeaponFrame.Visible = true
+        else
+            refreshToolDropdown()
+            vars.textButton3.Text = "Hide Auto Attack Menu"
+            vars.selectWeaponFrame.Visible = true
+        end
+    else
+        if dropdownOpen then
+            vars.textButton3.Text = "Show Auto Attack Menu"
+            dropdownFrame.Visible = true
+            vars.selectWeaponFrame.Visible = false
+        else
+            vars.textButton3.Text = "Show Auto Attack Menu"
+            vars.selectWeaponFrame.Visible = false
+        end
     end
 end
 
@@ -2687,6 +2835,12 @@ vars.destroyButton.MouseButton1Click:Connect(function()
         if vars.connectionCF then
             vars.connectionCF:Disconnect()
             vars.connectionCF = nil
+        end
+        if vars.teleportConnection then
+            vars.teleportConnection:Disconnect()
+        end
+        if vars.respawnConnection then
+            vars.respawnConnection:Disconnect()
         end
         vars.player.CharacterAdded:Disconnect()
         npcFolder1.DescendantAdded:Disconnect()
