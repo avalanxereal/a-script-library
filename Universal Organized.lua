@@ -2132,14 +2132,23 @@ local function createNPC()
     end
 end
 
-local character = vars.player.Character or player.CharacterAdded:Wait()
-local backpack = vars.player:WaitForChild("Backpack")
+local connectchar = {
+    character = vars.player.Character or nil,
+    backpack = vars.player:FindFirstChild("Backpack") or vars.player:WaitForChild("Backpack") or nil,
+}
+
+-- Always capture character on spawn
+vars.player.CharacterAdded:Connect(function(char)
+    connectchar.character = char
+    connectchar.backpack = game.Players.LocalPlayer:FindFirstChild("Backpack") or game.Players.LocalPlayer:WaitForChild("Backpack")    
+    task.wait()
+end)
 
 local equippedConnection
 
 function clearDropdown()
 	for _, child in pairs(vars.selectWeaponFrame:GetChildren()) do
-		if child:IsA("TextButton") and child.Name ~= "autoattack" then
+		if child:IsA("TextButton") then
 			child:Destroy()
 		end
 	end
@@ -2152,12 +2161,12 @@ function equipAndActivate()
 	if not vars.selectedTools or not vars.loopAttack then return end
 
 	local function findTool()
-		for _, tool in ipairs(backpack:GetChildren()) do
+		for _, tool in ipairs(connectchar.backpack:GetChildren()) do
 			if tool:IsA("Tool") and tool.Name == vars.selectedTools then
 				return tool
 			end
 		end
-		for _, tool in ipairs((vars.player.Character or vars.player.CharacterAdded:Wait()):GetChildren()) do
+		for _, tool in ipairs((connectchar.character):GetChildren()) do
 			if tool:IsA("Tool") and tool.Name == vars.selectedTools then
 				return tool
 			end
@@ -2170,14 +2179,18 @@ function equipAndActivate()
 			local tool = findTool()
 
 			-- Unequip other tools if any
-			for _, item in ipairs(character:GetChildren()) do
-				if item:IsA("Tool") and item.Name ~= vars.selectedTools then
-					item.Parent = backpack
-				end
-			end
+			if connectchar.character then
+	for _, item in ipairs(connectchar.character:GetChildren()) do
+		if item:IsA("Tool") and item.Name ~= vars.selectedTools then
+			item.Parent = connectchar.backpack
+		end
+	end
+end
 
 			if tool then
-				tool.Parent = character
+				if connectchar.character then
+	tool.Parent = connectchar.character
+end
 				pcall(function()
 					tool:Activate()
 				end)
@@ -2198,8 +2211,8 @@ end
 local function refreshToolDropdown()
 	clearDropdown()
 
-	local tools = backpack:GetChildren()
-	local ySize = 25
+	local tools = (connectchar.backpack):GetChildren()
+local ySize = 25
 local buttonCount2 = 0    
 
 	for _, tool in ipairs(tools) do
@@ -2249,9 +2262,7 @@ toggleOnButton.MouseButton1Click:Connect(function()
 			toggleOnButton.Text = "Auto Attack : ON"
 			equipAndActivate()
 
-			equippedConnection = vars.player.CharacterAdded:Connect(function(char)
-				character = char
-				task.wait(1)
+			equippedConnection = vars.player.CharacterAdded:Connect(function()
 				equipAndActivate()
 			end)
 		end
