@@ -189,7 +189,7 @@ vars.textButton2.Parent = vars.screenGui
 vars.textButton3.Size = UDim2.new(0, 160, 0, 30) -- Adjusted size
 vars.textButton3.BorderColor3 = Color3.fromRGB(0, 0, 0)
 vars.textButton3.Position = UDim2.new(0, 10, 1, -180) -- Position below the second button
-vars.textButton3.Text = "Show Auto Attack Menu"
+vars.textButton3.Text = "Show Weapon List"
 vars.textButton3.BackgroundColor3 = Color3.fromRGB(45, 45, 45) -- Dark background color
 vars.textButton3.TextColor3 = Color3.new(1, 1, 1) -- White text color
 vars.textButton3.Font = Enum.Font.Gotham
@@ -267,7 +267,7 @@ vars.selectWeaponFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 vars.selectWeaponFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 vars.selectWeaponFrame.BorderSizePixel = 1
 vars.selectWeaponFrame.Position = UDim2.new(0, 340, 1, -270)
-vars.selectWeaponFrame.Size = UDim2.new(0, 161, 0, 100)
+vars.selectWeaponFrame.Size = UDim2.new(0, 161, 0, 139)
 vars.selectWeaponFrame.ElasticBehavior = "Never"
 vars.selectWeaponFrame.ClipsDescendants = true
 vars.selectWeaponFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
@@ -2122,6 +2122,7 @@ local function createNPC()
             dropdownFrame.Visible = true
             vars.textButton3.Text = "Show Tools List"
             vars.selectWeaponFrame.Visible = false
+            weaponOpen = false
         else
             dropdownFrame.Visible = true
         end
@@ -2277,24 +2278,20 @@ function toggleAutoEquip()
     weaponOpen = not weaponOpen
     if weaponOpen then
         if dropdownOpen then
-            vars.textButton3.Text = "Hide Auto Attack Menu"
+            vars.textButton3.Text = "Hide Tools List"
             vars.textButton6.Text = "Open NPC List"
             dropdownFrame.Visible = false
             refreshToolDropdown()
             vars.selectWeaponFrame.Visible = true
+            dropdownOpen = false
         else
             refreshToolDropdown()
-            vars.textButton3.Text = "Hide Auto Attack Menu"
+            vars.textButton3.Text = "Hide Tools List"
             vars.selectWeaponFrame.Visible = true
         end
     else
-        if dropdownOpen then
-            vars.textButton3.Text = "Show Auto Attack Menu"
+            vars.textButton3.Text = "Show Tools List"
             vars.selectWeaponFrame.Visible = false
-        else
-            vars.textButton3.Text = "Show Auto Attack Menu"
-            vars.selectWeaponFrame.Visible = false
-        end
     end
 end
 
@@ -2349,7 +2346,7 @@ local function toggleButtonsVisibility()
     vars.textButton7.Visible = not visible
     vars.textButton8.Visible = not visible
     vars.textButton6.Text = "Open NPC List"
-    vars.textButton3.Text = "Show Weapon List"
+    vars.textButton3.Text = "Show Tools List"
     vars.textButton8.Text = "Open Player Editor"
     dropdownOpen = false
     weaponOpen = false
