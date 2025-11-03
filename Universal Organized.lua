@@ -1525,19 +1525,52 @@ local workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local immortalEnabled = false -- Toggle state
 
--- Function to disable CanTouch on all BaseParts
+-- Table of exception part names
+local exceptions = {
+    ["Button"] = true,
+    ["Respawn"] = true
+}
+
+-- Folder that contains exempted parts
+local gemStorage = workspace:FindFirstChild("GemStorage")
+
+-- Check if a part is inside GemStorage (directly or nested)
+local function isInGemStorage(part)
+    return gemStorage and part:IsDescendantOf(gemStorage)
+end
+
+-- Check if a part belongs to any player character
+local function isPlayerCharacterPart(part)
+    for _, player in pairs(Players:GetPlayers()) do
+        local character = player.Character
+        if character and part:IsDescendantOf(character) then
+            return true
+        end
+    end
+    return false
+end
+
+-- Function to disable CanTouch on all BaseParts except exceptions
 local function disableCanTouch()
     for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("BasePart") then
+        if part:IsA("BasePart")
+            and not exceptions[part.Name]
+            and not isInGemStorage(part)
+            and not isPlayerCharacterPart(part)
+        then
             part.CanTouch = false
         end
     end
 end
 
--- Function to enable CanTouch on all BaseParts
+-- Function to enable CanTouch on all BaseParts except exceptions
 local function enableCanTouch()
     for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("BasePart") then
+        if part:IsA("BasePart")
+            and not exceptions[part.Name]
+            and not isInGemStorage(part)
+            and not isPlayerCharacterPart(part)
+        then
             part.CanTouch = true
         end
     end
