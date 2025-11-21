@@ -1525,64 +1525,51 @@ end)
 local immortalEnabled = false -- Toggle state
 local Workspace = game:GetService("Workspace")
 
---// Exceptions list
 local exceptions = {
-	["Button"] = true,
-	["Respawn"] = true
+    ["Button"] = true,
+    ["Respawn"] = true
 }
 
---// Folder containing exempted parts
 local gemStorage = Workspace:FindFirstChild("GemStorage")
 
---// Helper: check if part is inside GemStorage
 local function isInGemStorage(part)
-	return gemStorage and part:IsDescendantOf(gemStorage)
+    return gemStorage and part:IsDescendantOf(gemStorage)
 end
 
---// Helper: check if part belongs to any player character
 local function isPlayerCharacterPart(part)
-	for _, player in ipairs(Players:GetPlayers()) do
-		local char = player.Character
-		if char and part:IsDescendantOf(char) then
-			return true
-		end
-	end
-	return false
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character and part:IsDescendantOf(player.Character) then
+            return true
+        end
+    end
+    return false
 end
 
---// Apply CanTouch rules to a single part
-local function processPart(part)
-	if not part:IsA("BasePart") then return end
-
-	if exceptions[part.Name]
-		or isInGemStorage(part)
-		or isPlayerCharacterPart(part)
-	then
-		-- allow touch
-		part.CanTouch = true
-	else
-		-- disable touch
-		part.CanTouch = false
-	end
+-- FIXED: proper grouping for conditions
+local function shouldAffect(part)
+    return (
+        part:IsA("BasePart") -- ONLY BaseParts should be changed
+        and not exceptions[part.Name]
+        and not isInGemStorage(part)
+        and not isPlayerCharacterPart(part)
+    )
 end
 
---// Disable for all existing parts
 local function disableCanTouch()
-	for _, obj in ipairs(Workspace:GetDescendants()) do
-		processPart(obj)
-	end
+    for _, part in ipairs(Workspace:GetDescendants()) do
+        if shouldAffect(part) then
+            part.CanTouch = false
+        end
+    end
 end
 
---// Enable all (full reset)
 local function enableCanTouch()
-	for _, obj in ipairs(Workspace:GetDescendants()) do
-		if obj:IsA("BasePart") then
-			obj.CanTouch = true
-		end
-	end
+    for _, part in ipairs(Workspace:GetDescendants()) do
+        if shouldAffect(part) then
+            part.CanTouch = true
+        end
+    end
 end
-
---// Listener for NEW parts
 
 -- Toggle function for Immortal Mode
 local function toggleGodMode()
@@ -1596,9 +1583,14 @@ local function toggleGodMode()
         enableCanTouch() -- Enable CanTouch again
     else
         vars.connectionpart = Workspace.DescendantAdded:Connect(function(obj)
-            task.wait()
-            processPart(obj)
-            end)
+    if obj:IsA("BasePart") then
+        if shouldAffect(obj) then
+            obj.CanTouch = false
+        else
+            obj.CanTouch = true
+        end
+    end
+end)
         modeButton.Text = "Unkillable : ON"
         immortalEnabled = true
         disableCanTouch() -- Disable CanTouch for all parts
