@@ -60,6 +60,7 @@ local vars = {
     defaultControlPos = nil,
     defaultInnerSize = nil,
     defaultInnerPos = nil,
+    connectionpart = nil,
     
     jpTween = nil,
     connectionUI = nil,
@@ -1521,70 +1522,85 @@ game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function(char)
 end)
 
 -- Define necessary services and variables
-local workspace = game:GetService("Workspace")
-local RunService = game:GetService("RunService")
 local immortalEnabled = false -- Toggle state
+local Workspace = game:GetService("Workspace")
 
--- Table of exception part names
+--// Exceptions list
 local exceptions = {
-    ["Button"] = true,
-    ["Respawn"] = true
+	["Button"] = true,
+	["Respawn"] = true
 }
 
--- Folder that contains exempted parts
-local gemStorage = workspace:FindFirstChild("GemStorage")
+--// Folder containing exempted parts
+local gemStorage = Workspace:FindFirstChild("GemStorage")
 
--- Check if a part is inside GemStorage (directly or nested)
+--// Helper: check if part is inside GemStorage
 local function isInGemStorage(part)
-    return gemStorage and part:IsDescendantOf(gemStorage)
+	return gemStorage and part:IsDescendantOf(gemStorage)
 end
 
--- Check if a part belongs to any player character
+--// Helper: check if part belongs to any player character
 local function isPlayerCharacterPart(part)
-    for _, player in pairs(Players:GetPlayers()) do
-        local character = player.Character
-        if character and part:IsDescendantOf(character) then
-            return true
-        end
-    end
-    return false
+	for _, player in ipairs(Players:GetPlayers()) do
+		local char = player.Character
+		if char and part:IsDescendantOf(char) then
+			return true
+		end
+	end
+	return false
 end
 
--- Function to disable CanTouch on all BaseParts except exceptions
+--// Apply CanTouch rules to a single part
+local function processPart(part)
+	if not part:IsA("BasePart") then return end
+
+	if exceptions[part.Name]
+		or isInGemStorage(part)
+		or isPlayerCharacterPart(part)
+	then
+		-- allow touch
+		part.CanTouch = true
+	else
+		-- disable touch
+		part.CanTouch = false
+	end
+end
+
+--// Disable for all existing parts
 local function disableCanTouch()
-    for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("BasePart")
-            and not exceptions[part.Name]
-            and not isInGemStorage(part)
-            and not isPlayerCharacterPart(part)
-        then
-            part.CanTouch = false
-        end
-    end
+	for _, obj in ipairs(Workspace:GetDescendants()) do
+		processPart(obj)
+	end
 end
 
--- Function to enable CanTouch on all BaseParts except exceptions
+--// Enable all (full reset)
 local function enableCanTouch()
-    for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("BasePart")
-            and not exceptions[part.Name]
-            and not isInGemStorage(part)
-            and not isPlayerCharacterPart(part)
-        then
-            part.CanTouch = true
-        end
-    end
+	for _, obj in ipairs(Workspace:GetDescendants()) do
+		if obj:IsA("BasePart") then
+			obj.CanTouch = true
+		end
+	end
 end
+
+--// Listener for NEW parts
 
 -- Toggle function for Immortal Mode
 local function toggleGodMode()
     if immortalEnabled then
+        if vars.connectionpart then
+            vars.connectionpart:Disconnect()
+            vars.connectionpart = nil
+        end
         modeButton.Text = "Unkillable : OFF"
         immortalEnabled = false
         enableCanTouch() -- Enable CanTouch again
     else
+        vars.connectionpart = Workspace.DescendantAdded:Connect(function(obj)
+            task.wait()
+            processPart(obj)
+            end)
         modeButton.Text = "Unkillable : ON"
-                immortalEnabled = true
+        immortalEnabled = true
         disableCanTouch() -- Disable CanTouch for all parts
     end
 end
